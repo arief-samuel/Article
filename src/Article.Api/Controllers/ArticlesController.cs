@@ -31,7 +31,7 @@ namespace Article.Api.Controller
         [HttpGet("{id}")]
         public async Task<IActionResult> GetArticle(int id)
         {
-            var article = await _context.Articles.Where(x => x.Id == id).SingleOrDefaultAsync();
+            var article = await _context.Articles.FindAsync(id);
             if (article is null)
                 return NotFound();
 
@@ -61,7 +61,7 @@ namespace Article.Api.Controller
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateArticle(int id, UpdateArticleDto article)
         {
-            var existingArticle = await _context.Articles.Where(x => x.Id == id).SingleOrDefaultAsync();
+            var existingArticle = await _context.Articles.FindAsync(id);
             if (article is null)
                 return NotFound();
 
@@ -83,9 +83,6 @@ namespace Article.Api.Controller
             var article = await _context.Articles.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (article is null)
                 return NotFound();
-
-            if (!ModelState.IsValid)
-                return new JsonResult("Something went wrong") { StatusCode = 500 };
 
             _context.Remove(article);
             await _context.SaveChangesAsync();

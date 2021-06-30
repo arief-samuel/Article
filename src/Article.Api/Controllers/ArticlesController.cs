@@ -1,6 +1,8 @@
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Article.Api.Data;
+using Article.Api.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -20,7 +22,8 @@ namespace Article.Api.Controller
         [HttpGet]
         public async Task<IActionResult> GetArticles()
         {
-            var articles = await _context.Articles.ToListAsync();
+            var articles = (await _context.Articles.ToListAsync())
+            .Select(article => article.AsDto());
             return Ok(articles);
 
         }
@@ -32,14 +35,22 @@ namespace Article.Api.Controller
             if (article is null)
                 return NotFound();
 
-            return Ok(article);
+            return Ok(article.AsDto());
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateArticle(Models.Article article)
+        public async Task<IActionResult> CreateArticle(CreateArticleDto articleDto)
         {
             if (!ModelState.IsValid)
                 return new JsonResult("Something went wrong") { StatusCode = 500 };
+
+            Models.Article article = new()
+            {
+                Title = articleDto.Title,
+                Category = articleDto.Category,
+                Url = articleDto.Url,
+                Created_At = DateTimeOffset.Now
+            };
 
             await _context.Articles.AddAsync(article);
             await _context.SaveChangesAsync();
@@ -48,7 +59,7 @@ namespace Article.Api.Controller
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateArticle(int id, Models.Article article)
+        public async Task<IActionResult> UpdateArticle(int id, UpdateArticleDto article)
         {
             var existingArticle = await _context.Articles.Where(x => x.Id == id).SingleOrDefaultAsync();
             if (article is null)

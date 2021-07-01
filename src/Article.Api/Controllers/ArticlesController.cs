@@ -20,12 +20,22 @@ namespace Article.Api.Controller
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetArticles()
+        public async Task<IActionResult> GetArticles([FromQuery] string category = null)
         {
+            if (category is not null)
+            {
+                var article = (await _context.Articles.Where(x => x.Category.Contains(category)).ToListAsync())
+                .Select(x => x.AsDto());
+
+                if (!article.Any())
+                    return NotFound();
+
+                return Ok(article);
+            }
+
             var articles = (await _context.Articles.ToListAsync())
             .Select(article => article.AsDto());
             return Ok(articles);
-
         }
 
         [HttpGet("{id}")]
